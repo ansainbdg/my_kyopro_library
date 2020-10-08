@@ -18,7 +18,7 @@ def combination_with_repetition(n, r, mod=10**9+7):  # n種類からr個取る�
     return combination(n+r-1, r, mod)
 
 
-class PrepereFactorial: #階乗を事前計算して、順列、組み合わせ、重複組み合わせを計算するクラス
+class PrepereFactorial: #muxnumまでの階乗を事前計算して、順列、組み合わせ、重複組み合わせを計算するクラス
     def __init__(self, maxnum=3*10**5, mod=10**9+7):
         self.factorial = [0]*(maxnum+1)
         self.factorial[0] = 1
