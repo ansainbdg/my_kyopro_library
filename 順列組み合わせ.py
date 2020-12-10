@@ -22,7 +22,7 @@ class PrepereFactorial:  # muxnumまでの階乗を事前計算して、順列�
     def __init__(self, maxnum=3*10**5, mod=10**9+7):
         self.factorial = [0]*(maxnum+1)
         self.factorial[0] = 1
-        for i in range(1, maxnum):
+        for i in range(1, maxnum+1):
             self.factorial[i] = (self.factorial[i-1]*i) % mod
         self.mod = mod
 
