@@ -1,3 +1,15 @@
+import math
+
+def permutation_nomod(n,r):
+    return math.prod(n,r)
+
+def combination_nomod(n,r):
+    return math.comb(n,r)
+
+def combination_with_repetition_nomod(n, r):
+    return math.comb(n+r-1,r)
+    
+
 def permutation(n, r, mod=10**9+7):  # 順列数
     permutation = 1
     for i in range(r):
@@ -18,6 +30,7 @@ def combination_with_repetition(n, r, mod=10**9+7):  # n種類からr個取る�
     return combination(n+r-1, r, mod)
 
 
+
 class PrepereFactorial:  # muxnumまでの階乗を事前計算して、順列、組み合わせ、重複組み合わせを計算するクラス
     def __init__(self, maxnum=3*10**5, mod=10**9+7):
         self.factorial = [0]*(maxnum+1)
@@ -33,3 +46,4 @@ class PrepereFactorial:  # muxnumまでの階乗を事前計算して、順列�
         return self.permutation(n, r)*pow(self.factorial[r], -1, self.mod) % self.mod
     def combination_with_repetition(self, n, r):
         return self.combination(n+r-1, r)
+
