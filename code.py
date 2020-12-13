@@ -1,6 +1,7 @@
 import sys
 from collections import defaultdict,Counter,deque
 from itertools import permutations,combinations,product,combinations_with_replacement,groupby,accumulate
+import operator
 #from math import sqrt,isqrt
 #from bisect import bisect_left,bisect_right
 #from functools import lru_cache,reduce
