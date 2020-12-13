@@ -1,11 +1,11 @@
 import math
-
+ 
 def permutation_nomod(n,r):
-    return math.prod(n,r)
-
+    return math.perm(n,r)
+ 
 def combination_nomod(n,r):
     return math.comb(n,r)
-
+ 
 def combination_with_repetition_nomod(n, r):
     return math.comb(n+r-1,r)
     
