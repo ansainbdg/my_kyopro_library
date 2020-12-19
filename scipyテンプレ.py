@@ -1,5 +1,5 @@
 from scipy.sparse import csr_matrix
-from scipy.sparse.csgraph import shortest_path, floyd_warshall, dijkstra, bellman_ford, johnson
+from scipy.sparse.csgraph import shortest_path, floyd_warshall, dijkstra, bellman_ford, johnson, NegativeCycleError
 import numpy as np
 
 n, m = map(int, input().split())
@@ -16,6 +16,9 @@ def graph_csr(edges, n, directed=True):  # 隣接リストから粗行列を作�
 
 
 csr = graph_csr(edges, n)
-floyd_warshall(csr)
+try:
+    print(floyd_warshall(csr))
+except NegativeCycleError:
+    print('-1')
 dijkstra(csr, indices=0)
 bellman_ford(csr, indices=0)
