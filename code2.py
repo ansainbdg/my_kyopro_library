@@ -8,6 +8,7 @@ import operator
 #import heapq
 #import numpy as np
 #import networkx as nx
+#from numba import njit
 def input(): return sys.stdin.readline().rstrip()
 
 
