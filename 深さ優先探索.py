@@ -24,11 +24,10 @@ while d:
         i = graph[v].pop()
         if visited[i] != -1:
             continue
-        visited[i]=0 
+        visited[i] = 0
         d.append(i)
 
-if visited[n]==0:
+if visited[n] == 0:
     print('Yes')
 else:
     print('No')
-
