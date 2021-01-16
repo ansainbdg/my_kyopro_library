@@ -18,9 +18,9 @@ d.append(1)
 
 while d:
     v = d[-1]
-    if graph[v] == []:
+    if graph[v] == []:#帰りがけ
         d.pop()
-    else:
+    else:#行きがけ
         i = graph[v].pop()
         if visited[i] != -1:
             continue
