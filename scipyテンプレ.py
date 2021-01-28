@@ -8,7 +8,7 @@ edges = [list(map(int, input().split())) for i in range(m)]
 
 def graph_csr(edges, n, directed=True):  # 隣接リストから粗行列を作成
     arr = np.array(edges, dtype=np.int64).T
-    arr = arr.astype("uint64")
+    arr = arr.astype(np.int64)
     if not directed:
         return csr_matrix((np.concatenate([arr[2], arr[2]]), (np.concatenate([arr[0]-1, arr[1]-1]), np.concatenate([arr[1]-1, arr[0]-1]))), shape=(n, n))
     else:
