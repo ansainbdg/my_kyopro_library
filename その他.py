@@ -36,3 +36,5 @@ class Permutation_oparation:
     
     def getindexbyitem(self,a):#要素aのindexを返す
         return self.permtation_index[a] 
+
+
