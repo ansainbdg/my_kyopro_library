@@ -16,7 +16,8 @@ from math import sqrt, gcd, factorial
 #numba例 @njit(i1(i4[:], i8[:, :]),cache=True) 引数i4配列、i8 2次元配列,戻り値i1
 def input(): return sys.stdin.readline().rstrip()
 def divceil(n, k): return 1+(n-1)//k  # n/kの切り上げを返す
-def yn(hantei,yes='Yes',no='No'):print(yes if hantei else no)
+def yn(hantei, yes='Yes', no='No'): print(yes if hantei else no)
+
 
 def main():
     mod = 10**9+7
