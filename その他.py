@@ -37,4 +37,25 @@ class Permutation_oparation:
     def getindexbyitem(self,a):#要素aのindexを返す
         return self.permtation_index[a] 
 
+class tuplepacking:
+    def __init__(self,maxsizelist):
+        self.n=len(maxsizelist)
+        self.maxsizelist=tuple(maxsizelist)
+    
+    def packing(self,tuples):
+        ans=0
+        for size,tu in zip(self.maxsizelist,tuples):
+            ans*=size
+            ans+=tu
+        return ans
+    
+    def unpacking(self,value):
+        ans=[0]*self.n
+        for i in range(self.n)[::-1]:
+            value,ans[i]=divmod(value,self.maxsizelist[i])
+        return ans
+
+
+
+
 
