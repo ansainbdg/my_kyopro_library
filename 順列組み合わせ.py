@@ -33,7 +33,7 @@ def combination_with_repetition(n, r, mod=10**9+7):  # n種類からr個取る�
     return combination(n+r-1, r, mod)
 
 
-class PrepereFactorial:  # muxnumまでの階乗を事前計算して、順列、組み合わせ、重複組み合わせを計算するクラス
+class PrepereFactorial:  # maxnumまでの階乗を事前計算して、順列、組み合わせ、重複組み合わせを計算するクラス
     def __init__(self, maxnum=3*10**5, mod=10**9+7):
         self.factorial = [1]*(maxnum+1)
         for i in range(1, maxnum+1):
@@ -50,7 +50,7 @@ class PrepereFactorial:  # muxnumまでの階乗を事前計算して、順列�
         return self.combination(n+r-1, r)
 
 
-class PrepereFactorial2:  # muxnumまでの階乗を事前計算して、順列、組み合わせ、重複組み合わせを計算するクラス
+class PrepereFactorial2:  # maxnumまでの階乗を事前計算して、順列、組み合わせ、重複組み合わせを計算するクラス。逆元のテーブルもpow無しで前計算する。maxnumに比べて関数呼び出しが多いならこちら
     def __init__(self, maxnum=3*10**5, mod=10**9+7):
         self.factorial = [1]*(maxnum+1)
         modinv_table = [-1] * (maxnum+1)
