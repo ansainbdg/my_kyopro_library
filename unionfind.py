@@ -1,9 +1,12 @@
 from collections import defaultdict
-#https://note.nkmk.me/python-union-find/から一部改変
+# https://note.nkmk.me/python-union-find/から一部改変
+
+
 class UnionFind():
     def __init__(self, n):
         self.n = n
         self.parents = [-1] * n
+        self.group_num = n
 
     def find(self, x):
         if self.parents[x] < 0:
@@ -19,6 +22,7 @@ class UnionFind():
         if x == y:
             return
 
+        self.group_num -= 1
         if self.parents[x] > self.parents[y]:
             x, y = y, x
 
@@ -39,10 +43,10 @@ class UnionFind():
         return [i for i, x in enumerate(self.parents) if x < 0]
 
     def group_count(self):
-        return len(self.roots())
+        return self.group_num
 
     def all_group_members(self):
-        self.all_group_member=defaultdict(list)
+        self.all_group_member = defaultdict(list)
         for i in range(self.n):
             self.all_group_member[self.find(i)].append(i)
         return self.all_group_member
