@@ -70,18 +70,18 @@ class BinaryTrie:
         while b:
             i = bool(m & b)
             i2 = bool(bound & b)
-            if i2==0 or upflg==1:
+            if i2 == 0 or upflg == 1:
                 ret = (ret << 1)
                 if node[i] is None:
                     i ^= 1
-                    ret+=1
-                    upflg=1
+                    ret += 1
+                    upflg = 1
                 b >>= 1
-                node=node[i]
+                node = node[i]
             else:
-                if node[i^i2] is None:
+                if node[i ^ i2] is None:
                     return None
-                node=node[i^i2]
+                node = node[i ^ i2]
                 b >>= 1
                 ret = (ret << 1) + i2
         return ret
@@ -141,6 +141,8 @@ class BinaryTrie:
 
     def less_x(self, x):
         """xより小さい値の数を出力"""
+        if x < 0:
+            return 0
         b = self.bit_start
         node = self.root
         ans = 0
@@ -155,6 +157,30 @@ class BinaryTrie:
                 if node[0] is not None:
                     ans += node[0][2]
             node = node[i]
+            b >>= 1
+        return ans
+
+    def less_x_mask(self, x, mask=0):
+        """xormask適用後,xより小さい値の数を出力"""
+        if x < 0:
+            return 0
+        b = self.bit_start
+        node = self.root
+        ans = 0
+        m = mask
+        # print(self.root)
+        while b:
+            i = bool(x & b)
+            mm = bool(m & b)
+            imm = i ^ mm
+            if node[imm] is None:
+                if i == 1:
+                    ans += node[imm ^ 1][2]
+                return ans
+            if i == 1:
+                if node[imm ^ 1] is not None:
+                    ans += node[imm ^ 1][2]
+            node = node[imm]
             b >>= 1
         return ans
 

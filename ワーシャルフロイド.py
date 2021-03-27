@@ -9,7 +9,7 @@ for i in range(V):
 for k in range(V):
     for i in range(V):
         for j in range(V):
-                cost[i][j] = min(cost[i][j], cost[i][k] + cost[k][j])
+            cost[i][j] = min(cost[i][j], cost[i][k] + cost[k][j])
 if any(cost[i][i] < 0 for i in range(V)):
     print("NEGATIVE CYCLE")
 else:
