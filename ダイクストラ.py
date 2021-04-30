@@ -18,7 +18,7 @@ def main():
     heappush(hq, (0, r))
     while hq:
         """ゴールが1か所だけならこれを使う
-        if noad==goal:
+        if node==goal:
             print(dist)
             return
         """
@@ -55,7 +55,7 @@ def main2():
     while hq:
         dist, node = heappop(hq)
         """ゴールが1か所だけならこれで枝刈り
-        if noad==goal:
+        if node==goal:
             print(dist)
             return
         """
@@ -95,7 +95,7 @@ def main3():
     while hq:
         dist, node = heappop(hq)
         """ゴールが1か所だけならこれで枝刈り
-        if noad==goal:
+        if node==goal:
             print(dist)
             return
         """
