@@ -48,7 +48,7 @@ class tuplepacking:
         self.n=len(maxsizelist)
         self.maxsizelist=tuple(maxsizelist)
     
-    def packing(self,tuples):
+    def packing(self,*tuples):
         ans=0
         for size,tu in zip(self.maxsizelist,tuples):
             ans*=size
