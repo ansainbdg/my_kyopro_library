@@ -1,17 +1,21 @@
 import math
 
-
 def permutation_nomod(n, r):
+    if r < 0:
+        return 0
     return math.perm(n, r)
 
 
 def combination_nomod(n, r):
+    if r < 0:
+        return 0
     return math.comb(n, r)
 
 
 def combination_with_repetition_nomod(n, r):
+    if r < 0:
+        return 0
     return math.comb(n+r-1, r)
-
 
 def permutation(n, r, mod=10**9+7):  # 順列数
     permutation = 1
