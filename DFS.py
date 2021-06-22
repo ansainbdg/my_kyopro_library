@@ -5,22 +5,21 @@ n, m = map(int, input().split())
 graph = [[] for _ in range(n+1)]
 
 for i in range(m):
-    a, b = map(int, input().split())
+    a, b = map(lambda x: int(x)-1, input().split())
     graph[a].append(b)
     graph[b].append(a)
 
-visited = [-1] * (n+1)
+visited = [-1] * n
 visited[0] = 0
-visited[1] = 0
 
 d = deque()
-d.append(1)
+d.append(0)
 
 while d:
     v = d[-1]
-    if graph[v] == []:#帰りがけ
+    if graph[v] == []:  # 帰りがけ
         d.pop()
-    else:#行きがけ
+    else:  # 行きがけ
         i = graph[v].pop()
         if visited[i] != -1:
             continue
