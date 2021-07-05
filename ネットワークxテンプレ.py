@@ -34,3 +34,12 @@ nx.min_cost_flow_cost(G)
 #24
 nx.min_cost_flow(G)
 #{'a': {'b': 4, 'c': 1}, 'd': {}, 'b': {'d': 4}, 'c': {'d': 1}}
+
+#最大マッチング
+n=3
+G = nx.Graph()
+G.add_nodes_from(list(range(2*n)))
+G.add_edge(0,0+n)
+G.add_edge(0,1+n)
+G.add_edge(1,1+n)
+nx.algorithms.bipartite.maximum_matching(G,set(range(n)))
