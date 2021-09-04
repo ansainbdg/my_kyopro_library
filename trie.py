@@ -60,32 +60,6 @@ class BinaryTrie:
             b >>= 1
         return ret2
 
-    def lower_bound(self, bound=0, mask=0):
-        """xor_mask適用後のboundより大きい値での最小値を取得。存在しない場合はNoneを返す。"""
-        b = self.bit_start
-        node = self.root
-        m = mask
-        ret = 0
-        upflg = 0
-        while b:
-            i = bool(m & b)
-            i2 = bool(bound & b)
-            if i2 == 0 or upflg == 1:
-                ret = (ret << 1)
-                if node[i] is None:
-                    i ^= 1
-                    ret += 1
-                    upflg = 1
-                b >>= 1
-                node = node[i]
-            else:
-                if node[i ^ i2] is None:
-                    return None
-                node = node[i ^ i2]
-                b >>= 1
-                ret = (ret << 1) + i2
-        return ret
-
     def get_kth_min(self, k=1):
         """k番目に小さい値を取得"""
         b = self.bit_start
@@ -128,6 +102,18 @@ class BinaryTrie:
                 node[i] = None
                 node = tmp
             b >>= 1
+
+    def lower_bound(self, bound=0):
+        """boundより大きい値での最小値を取得。存在しない場合はNoneを返す。"""
+        ans = self.get_kth_min(self.less_x(bound+1)+1)
+        if ans > bound:
+            return ans
+
+    def upper_bound(self, bound=0):
+        """boundより小さい値での最大値を取得。存在しない場合はNoneを返す。"""
+        ans = self.get_kth_min(self.less_x(bound))
+        if ans < bound:
+            return ans
 
     def merge(self, trie):
         """2つのbinatytrie木を合成"""
