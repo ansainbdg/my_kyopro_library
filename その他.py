@@ -11,11 +11,16 @@ def group(arr, count):  # [B,A,A,C,A],A→[0,2,2,0,1]
 def trans(l):  # リストの転置
     return [list(x) for x in zip(*l)]
 
-def rankdata(arr):#座標圧縮
-    unique=list(set(arr))
+def rankdata(arr, length=False):  # 座標圧縮 length=Trueの場合、rankから次のrankまでの区間がいくつあるかを返す
+    unique = list(set(arr))
     unique.sort()
-    rank={e: i+1 for i, e in enumerate(unique)}
-    return [rank[i] for i in arr]
+    rank = {e: i+1 for i, e in enumerate(unique)}
+    if length:
+        leng = [e2-e1 for e1, e2 in zip(unique,unique[:1])]
+        leng.append(10**9)
+        return [rank[i] for i in arr], leng
+    else:
+        return [rank[i] for i in arr]
 
 
 class Permutation_oparation:
