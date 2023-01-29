@@ -17,6 +17,7 @@ def main():
     d = deque()
     d.append(0)
 
+
     while d:
         v = d.popleft()
         for i in graph[v]:
