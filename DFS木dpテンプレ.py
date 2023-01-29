@@ -1,6 +1,4 @@
 from collections import deque
-from copy import deepcopy
-
 
 def main():
     """
@@ -17,31 +15,30 @@ def main():
         graph[a].append(b)
         graph[b].append(a)
 
-    mother = [[] for _ in range(n)]
     dp = [1]*n
-    # print(dp)
-    visited = [False]*n
-    visited[0] = True
 
     d = deque()
+    now = set()
+    d.append(~0)
     d.append(0)
 
     def merge(a, b):
         return (a*b) % mod
-
+    
     while d:
-        v = d[-1]
-        if graph[v] == []:  # 帰りがけ
-            for m in mother[v]:
-                dp[v] = merge(dp[v], dp[m])
-            d.pop()
-        else:  # 行きがけ
-            i = graph[v].pop()
-            if visited[i]:
-                continue
-            visited[i] = True
-            d.append(i)
-            mother[v].append(i)
+        i = d.pop()
+        now.add(i)
+        if i >= 0:# 行きがけ
+            for j in graph[i]:
+                if j  not in now:
+                    d.append(~j)
+                    d.append(j)
+        else:  # 帰りがけ
+            i=~i
+            now.discard(i)
+            for j in graph[i]:
+                if j not in now:
+                    dp[i] = merge(dp[i], dp[j])
     print(dp[0])
 
 
@@ -56,18 +53,21 @@ def main2():
     mothers = [[] for i in range(n)]
     for i, AA in enumerate(A, 1):
         mothers[AA].append(i)
-    m2 = deepcopy(mothers)
+
+    dp = [1]*n
     d = deque()
+    d.append(~0)
     d.append(0)
     def merge(a, b):
         return (a*b) % mod
     while d:
-        v = d[-1]
-        if m2[v] == []:
-            d.pop()
-            for m in mothers[v]:
-                dp[v]=merge(dp[v],dp[m])
-        else:
-            i = m2[v].pop()
-            d.append(i)
+        i = d.pop()
+        if i >= 0:# 行きがけ
+            for j in mothers[i]:
+                d.append(~j)
+                d.append(j)
+        else:  # 帰りがけ
+            i=~i
+            for j in mothers[i]:
+                dp[i] = merge(dp[i], dp[j])
     print(dp[0])
