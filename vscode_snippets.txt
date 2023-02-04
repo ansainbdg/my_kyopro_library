@@ -1,115 +1,99 @@
 {
-	// Place your GLOBAL snippets here. Each snippet is defined under a snippet name and has a scope, prefix, body and 
-	// description. Add comma separated ids of the languages where the snippet is applicable in the scope field. If scope 
-	// is left empty or omitted, the snippet gets applied to all languages. The prefix is what is 
-	// used to trigger the snippet and the body will be expanded and inserted. Possible variables are: 
-	// $1, $2 for tab stops, $0 for the final cursor position, and ${1:label}, ${2:another} for placeholders. 
-	// Placeholders with the same ids are connected.
-	// Example:
-	// "Print to console": {
-	// 	"scope": "javascript,typescript",
-	// 	"prefix": "log",
-	// 	"body": [
-	// 		"console.log('$1');",
-	// 		"$2"
-	// 	],
-	// 	"description": "Log output to console"
-	// }
 	"input": {
 		"prefix": "intinput",
 		"body": [
 			"int(input())"
-		],
+		]
 	},
 	"inputlist": {
 		"prefix": "listinput",
 		"body": [
 			"list(map(int, input().split()))"
-		],
+		]
 	},
 	"inputmap": {
 		"prefix": "mapinput",
 		"body": [
 			"map(int, input().split())"
-		],
+		]
 	},
 	"inputdlist": {
 		"prefix": "listlistinput",
 		"body": [
 			"[list(map(int, input().split())) for i in range(n)]"
-		],
+		]
 	},
 	"forrange": {
 		"prefix": "forrange",
 		"body": [
 			"for $1 in range($2):"
-		],
+		]
 	},
 	"inputstrlist": {
 		"prefix": "strlistinput",
 		"body": [
 			"list(input())"
-		],
+		]
 	},
 	"print": {
 		"prefix": "print",
 		"body": [
 			"print($1)"
-		],
+		]
 	},
 	"printlist": {
 		"prefix": "printlist",
 		"body": [
 			"print(*$1, sep='\\n')"
-		],
+		]
 	},
 	"inputtate": {
 		"prefix": "intlistinput",
 		"body": [
 			"[int(input()) for i in range(n)]"
-		],
+		]
 	},
 	"comb": {
 		"prefix": "comb",
 		"body": [
 			"list(combinations($1,2))"
-		],
+		]
 	},
 	"perm": {
 		"prefix": "perm",
 		"body": [
 			"list(permutations($1))"
-		],
+		]
 	},
 	"prod": {
 		"prefix": "prod",
 		"body": [
 			"list(product([0,1],repeat=$1))"
-		],
+		]
 	},
 	"combrep": {
 		"prefix": "combrep",
 		"body": [
 			"list(itertools.combinations_with_replacement($1,5))"
-		],
+		]
 	},
 	"bisimp": {
 		"prefix": "bisimp",
 		"body": [
 			"import bisect"
-		],
+		]
 	},
 	"bisectl": {
 		"prefix": "bisectl",
 		"body": [
 			"=bisect_left($1, n) #n未満の個数を数える"
-		],
+		]
 	},
 	"bisectr": {
 		"prefix": "bisectr",
 		"body": [
 			"=bisect_right($1, n) #n以下の個数を数える"
-		],
+		]
 	},
 	"groupby": {
 		"prefix": "groupby",
@@ -117,24 +101,24 @@
 			"for key, value in groupby($1): #key:groupbyでグループ分けした値 value:グループのイテレータ",
 			"    key",
 			"    len(list(value))"
-		],
+		]
 	},
 	"dtype": {
 		"prefix": "dtype",
 		"body": [
 			"dtype=np.int64"
-		],
+		]
 	},
 	"njit": {
 		"prefix": "njit",
 		"body": [
 			"@njit('i8(i8, i8[:, :])',cache=True)"
-		],
+		]
 	},
 	"lambda": {
 		"prefix": "lambda",
 		"body": [
 			"lambda x: int(x)-1"
-		],
-	},
+		]
+	}
 }
