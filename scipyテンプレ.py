@@ -7,13 +7,25 @@ edges = [list(map(int, input().split())) for i in range(m)]
 
 
 def graph_csr(edges, n, directed=True, indexed_1=True):  # 隣接リストから粗行列を作成
-    arr = np.array(edges, dtype=np.int64).T
-    arr = arr.astype(np.int64)
-    index = int(indexed_1)
-    if not directed:
-        return csr_matrix((np.concatenate([arr[2], arr[2]]), (np.concatenate([arr[0]-index, arr[1]-index]), np.concatenate([arr[1]-index, arr[0]-index]))), shape=(n, n))
+
+    if len(edges[0])!=0:
+        arr = np.array(edges, dtype=np.int64).T
     else:
-        return csr_matrix((arr[2], (arr[0]-index, arr[1]-index)), shape=(n, n))
+        arr = np.zeros((3,0),dtype=np.int64)
+
+    index = int(indexed_1)
+
+    if arr.shape[0]==2:
+        length = np.ones(len(edges),dtype=np.int64)
+    elif arr.shape[0]==3:
+        length = arr[2]
+    else:
+        raise "edge shape is 2(unweighted) or 3(weighted)"
+
+    if not directed:
+        return csr_matrix((np.concatenate([length, length]), (np.concatenate([arr[0]-index, arr[1]-index]), np.concatenate([arr[1]-index, arr[0]-index]))), shape=(n, n))
+    else:
+        return csr_matrix((length, (arr[0]-index, arr[1]-index)), shape=(n, n))
 
 
 csr = graph_csr(edges, n)
