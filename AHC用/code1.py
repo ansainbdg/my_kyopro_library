@@ -18,9 +18,8 @@ def yn(hantei, yes='Yes', no='No'): print(yes if hantei else no)
 
 
 def main():
-    start_time=time()
     SA_start=time()
-    SA_end=start_time+1.8
+    SA_end=SA_start+1.8
     T0=5
     T1=1
     
