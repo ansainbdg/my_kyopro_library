@@ -93,7 +93,7 @@ def execute_case_interactive(args,file="code1.py",TL=None):
         print(proc.stderr)
         return seed,None
 
-def main(CASE=100,file ='code1.py',interactive=False,multi=False):
+def main(CASE=100,file ='code1.py',interactive=False,multi=False,print_score=True):
     scores = []
     if interactive:execute = execute_case_interactive
     else:execute = execute_case
@@ -115,9 +115,12 @@ def main(CASE=100,file ='code1.py',interactive=False,multi=False):
         for i in tqdm(range(CASE)):
             seed,score = execute(i,file=file)
             if score is not None:
-                scores.append([score, f'{seed:04}'])
+                scores.append([score, f'seed:{seed:04}'])
             else:
                 return
+    if print_score:
+        for score,s in scores:
+            print(s,' score:',score)
     scores.sort()
     total = sum([s[0] for s in scores])
     ave = total / CASE
