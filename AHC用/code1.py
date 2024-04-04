@@ -1,16 +1,15 @@
 # AHC用テンプレ
 import sys
-from math import exp
-from random import random,shuffle,choice,sample,choices,uniform,randrange
+from math import exp, sqrt, gcd, factorial
+from random import random, shuffle, choice, sample, choices, uniform, randrange, randint, seed
 from time import time
+# from bisect import bisect_left, bisect_right
+# from collections import defaultdict, Counter, deque
+# from functools import lru_cache, reduce
+# from heapq import heappush, heappop, heapify, heappushpop, heapreplace
+# from itertools import accumulate,permutations,combinations,combinations_with_replacement,product
+# import operator
 
-#from scipy.sparse import csr_matrix
-#from scipy.sparse.csgraph import shortest_path, floyd_warshall, dijkstra, bellman_ford, johnson, NegativeCycleError, maximum_bipartite_matching, maximum_flow, minimum_spanning_tree
-#import networkx as nx
-#from networkx.utils import UnionFind
-#from numba import njit, b1, i1, i4, i8, f8
-#numba例 @njit(i1(i4[:], i8[:, :]),cache=True) 引数i4配列、i8 2次元配列,戻り値i1
-#import numpy as np
 
 def input(): return sys.stdin.readline().rstrip()
 def divceil(n, k): return 1+(n-1)//k  # n/kの切り上げを返す
@@ -18,14 +17,14 @@ def yn(hantei, yes='Yes', no='No'): print(yes if hantei else no)
 
 
 def main():
-    SA_start=time()
-    SA_end=SA_start+1.8
-    T0=5
-    T1=1
-    
+    SA_start = time()
+    SA_end = SA_start+1.8
+    T0 = 5
+    T1 = 1
+
     def get_temp(Time):
         return T0+(Time-SA_start)*(T0-T1)/(SA_start-SA_end)
-    
+
     """
     while True:
         i += 1

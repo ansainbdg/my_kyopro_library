@@ -2,9 +2,9 @@ from bisect import bisect_left, bisect_right
 from collections import defaultdict, Counter, deque
 from functools import lru_cache, reduce
 from heapq import heappush, heappop, heapify, heappushpop, heapreplace
+from itertools import accumulate,permutations,combinations,combinations_with_replacement,product
 import sys
-from math import sqrt, gcd, factorial
-#from math import isqrt, prod, comb  #python3.8用(notpypy)
+from math import exp,sqrt,gcd,factorial
 import operator
 
 #from scipy.sparse import csr_matrix
