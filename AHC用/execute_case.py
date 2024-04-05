@@ -354,17 +354,21 @@ def execute_case_atcoder_interactive(args, file="code1.py", inputdir='in', outpu
     else:
         newcode = newinput + newcode
     repfile = file.replace('.py', f'{seed:04}.py')
-    with open(f'pipeline/{repfile}', 'w') as fout:
+    with open(f'pipeline/{repfile}', 'w', encoding='UTF8') as fout:
         fout.write(newcode)
     if os.path.exists(f'pipeline/{seed:04}.txt'):
         os.remove(f'pipeline/{seed:04}.txt')
-    _, score, _ = execute_case_interactive(
+    _, score, time = execute_case_interactive(
         seed, file=f'pipeline/{repfile}', inputdir=inputdir, outputdir=outputdir)
     with open(f'pipeline/{seed:04}.txt') as fin:
         input_text = fin.read()
 
     session = requests.session()
     login(session)
-    _, _, TimeConsumption = test_code(session, code, input_text)
+    stdout2, _, TimeConsumption = test_code(session, code, input_text)
 
-    return seed, score, TimeConsumption/1000
+    with open(f'{outputdir}/{seed:04}.txt') as fout:
+        stdout1 = fout.read()
+        print('出力一致:', stdout1 == stdout2[4].replace('\\n', '\n'))
+
+    return seed, score, time,TimeConsumption/1000
