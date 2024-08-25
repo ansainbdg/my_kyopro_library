@@ -1,24 +1,24 @@
 {
 	"input": {
-		"prefix": "intinput",
+		"prefix": "inputint",
 		"body": [
 			"int(input())"
 		]
 	},
 	"inputlist": {
-		"prefix": "listinput",
+		"prefix": "listinputint",
 		"body": [
 			"list(map(int, input().split()))"
 		]
 	},
 	"inputmap": {
-		"prefix": "mapinput",
+		"prefix": "mapinputint",
 		"body": [
 			"map(int, input().split())"
 		]
 	},
 	"inputdlist": {
-		"prefix": "listlistinput",
+		"prefix": "listlistinputint",
 		"body": [
 			"[list(map(int, input().split())) for i in range(n)]"
 		]
@@ -30,7 +30,7 @@
 		]
 	},
 	"inputstrlist": {
-		"prefix": "strlistinput",
+		"prefix": "listinputstr",
 		"body": [
 			"list(input())"
 		]
