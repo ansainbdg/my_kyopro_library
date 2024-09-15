@@ -56,6 +56,10 @@ def execute_case(args, file="code1.py", TL=None):
         seed, inputdir, outputdir, file, TL = args
     else:
         raise ValueError('not enough values to unpack')
+    if not os.path.isdir(inputdir):
+        os.mkdir(inputdir)
+    if not os.path.isdir(outputdir):
+        os.mkdir(outputdir)
     input_file_path = f'{inputdir}/{seed:04}.txt'
     output_file_path = f'{outputdir}/{seed:04}.txt'
     with open(input_file_path) as fin:
@@ -136,6 +140,8 @@ def execute_case(args, file="code1.py", inputdir='in', outputdir='out', TL=None)
         os.mkdir(inputdir)
     if not os.path.isdir(outputdir):
         os.mkdir(outputdir)
+    if not os.path.isdir("pipeline"):
+        os.mkdir("pipeline")
     input_file_path = f'{inputdir}/{seed:04}.txt'
     output_file_path = f'{outputdir}/{seed:04}.txt'
     with open(input_file_path) as fin:
@@ -305,6 +311,10 @@ def execute_case_atcoder(args, file="code1.py", inputdir='in', outputdir='out'):
         seed, file, inputdir, outputdir = args
     else:
         raise ValueError('not enough values to unpack')
+    if not os.path.isdir(inputdir):
+        os.mkdir(inputdir)
+    if not os.path.isdir(outputdir):
+        os.mkdir(outputdir)
     input_file_path = f'{inputdir}/{seed:04}.txt'
     output_file_path = f'{outputdir}/{seed:04}.txt'
     with open(input_file_path) as fin:
@@ -342,6 +352,10 @@ def execute_case_atcoder_interactive(args, file="code1.py", inputdir='in', outpu
         seed, file, inputdir, outputdir = args
     else:
         raise ValueError('not enough values to unpack')
+    if not os.path.isdir(inputdir):
+        os.mkdir(inputdir)
+    if not os.path.isdir(outputdir):
+        os.mkdir(outputdir)
     if not os.path.isdir("pipeline"):
         os.mkdir("pipeline")
     with open(file, encoding='UTF8') as fin:
