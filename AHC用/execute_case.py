@@ -5,7 +5,6 @@ import os
 from tqdm import tqdm
 import time
 import pandas as pd
-import config
 from bs4 import BeautifulSoup
 import requests
 import re
@@ -13,19 +12,15 @@ import json
 import toml
 from datetime import datetime
 from math import log10
+import browser_cookie3
 
 def newlog10(x):
     return log10(x+1)
 
 
 def login(session):
-    LOGIN_URL = 'https://atcoder.jp/login'
-    login_info = {
-        "csrf_token": get_csrf_token(session, LOGIN_URL),
-        "username": config.USERNAME,
-        "password": config.PASSWORD
-    }
-    result = session.post(LOGIN_URL, data=login_info)
+    cj = browser_cookie3.chrome(cookie_file=r"C:/Users/tit1c/AppData/Local/Google/Chrome/User Data/Profile 1/Network/Cookies",domain_name='atcoder.jp')
+    session.cookies = cj
     # print(result.text)
 
 
@@ -209,7 +204,7 @@ def execute_case(args, file="code1.py", inputdir='in', outputdir='out', TL=None)
     return seed, score, end_time-start_time,"Accepted" if score!=0 else "Wrong Answer",proc.stderr.decode('utf8')
 
 
-
+# 現在atcoder仕様変更により機能せず
 def execute_case_atcoder(args, file="code1.py", inputdir='in', outputdir='out'):
     if isinstance(args, int):
         seed = args
@@ -259,10 +254,10 @@ def execute_case_atcoder(args, file="code1.py", inputdir='in', outputdir='out'):
 
     return seed, score, TimeConsumption/1000,"Accepted" if score!=0 else "Wrong Answer",stderr
 
-
+# 現在atcoder仕様変更により機能せず
 def execute_case_atcoder_interactive(args, file="code1.py", inputdir='in', outputdir='out'):
     # 4つのうちこれだけc++対応未定
-    if file[-3]!=".py":
+    if file[-3:]!=".py":
         raise ValueError
     if isinstance(args, int):
         seed = args
@@ -302,6 +297,7 @@ def execute_case_atcoder_interactive(args, file="code1.py", inputdir='in', outpu
     if result!="Accepted":
         return seed,score, time, result,stderr
 
+
     with open(f'pipeline/{seed:04}.txt') as fin:
         input_text = fin.read()
 
@@ -320,6 +316,7 @@ def execute_case_atcoder_interactive(args, file="code1.py", inputdir='in', outpu
             return seed, score, TimeConsumption/1000,result,stderr
         else:
             return seed, score, TimeConsumption/1000,"出力結果不一致",stderr
+    
 
 def execute_case_main(args,file="code1.py",interactive=False,atcoder=False,inputdir='in', outputdir='out'):
     if file[-4:]==".cpp":
@@ -400,7 +397,7 @@ def main(CASE=100, file='code1.py', interactive=False, to_csv=False, use_koteise
             else:
                 return
     df = pd.DataFrame(scores).set_index(0).sort_index()
-    timestamp = datetime.now().strftime("%d%H%M")
+    timestamp = datetime.now().strftime("%H%M")
     df.index.name = 'case'
     df.columns = [f'score_{timestamp}_{file[:-3]}',f'log10_{timestamp}_{file[:-3]}',f'state_{timestamp}_{file[:-3]}', f'time_{timestamp}_{file[:-3]}']
     desc = df.describe()
