@@ -27,23 +27,16 @@ def generate_cases(start_seed, num_cases):
     subprocess.run(cmd, check=True, encoding="utf-8")
     print("Generation complete.")
 
-def test_case_interactive(seed, program_path, debug=False, debug_in_only=False):
+def get_user_command(program_path):
     """
-    指定されたプログラムを使用してテストケースを対話的に実行します。
+    プログラムパスから実行コマンドを生成し、必要に応じてコンパイルします。
     
     Args:
-        seed (int): 実行するテストケースのシード。
         program_path (str): プログラムへのパス (例: 'code01.py' や 'a.exe')。
         
     Returns:
-        tuple: (score (int), stderr (str))
+        tuple: (user_cmd (str), error_message (str or None))
     """
-    input_file = f"in/{seed:04d}.txt"
-    if not os.path.exists(input_file):
-        print(f"Input file {input_file} not found. Generating it...")
-        generate_cases(seed, 1)
-        
-    # ユーザープログラムを実行するコマンドを決定する
     if program_path.endswith(".py"):
         user_cmd = f"python {program_path}" 
     elif program_path.endswith(".cpp"):
@@ -55,8 +48,9 @@ def test_case_interactive(seed, program_path, debug=False, debug_in_only=False):
             capture_output=True, text=True, encoding="utf-8", errors="replace"
         )
         if compile_result.returncode != 0:
+            error_msg = f"Compilation failed:\n{compile_result.stderr}\n{compile_result.stdout}"
             print(f"Compilation failed:\n{compile_result.stderr}")
-            return -1, f"Compilation failed:\n{compile_result.stderr}\n{compile_result.stdout}"
+            return None, error_msg
         print("Compilation successful.")
         user_cmd = f"./{exe_path}"
     elif program_path.endswith(".rs"):
@@ -75,19 +69,119 @@ def test_case_interactive(seed, program_path, debug=False, debug_in_only=False):
             capture_output=True, text=True, encoding="utf-8", errors="replace"
         )
         if compile_result.returncode != 0:
+            error_msg = f"Compilation failed:\n{compile_result.stderr}\n{compile_result.stdout}"
             print(f"Compilation failed:\n{compile_result.stderr}")
-            return -1, f"Compilation failed:\n{compile_result.stderr}\n{compile_result.stdout}"
+            return None, error_msg
         print("Compilation successful.")
         exe_path = f"target/release/{bin_name}.exe"
         user_cmd = f"./{exe_path}"
     elif program_path.endswith(".exe"):
-        # .exeファイルの場合、./を付ける（testerがパスを見つけられるようにする）
+        # .exeファイルの場合、./を付ける（テスターがパスを見つけられるようにする等）
         if not program_path.startswith("./") and not program_path.startswith(".\\") and not os.path.isabs(program_path):
             user_cmd = f"./{program_path}"
         else:
             user_cmd = program_path
     else:
         user_cmd = program_path
+        
+    return user_cmd, None
+
+def test_case(seed, program_path):
+    """
+    指定されたプログラムを使用してテストケースを非対話的に実行し、visツールでスコアを計算します。
+    
+    Args:
+        seed (int): 実行するテストケースのシード。
+        program_path (str): プログラムへのパス (例: 'code01.py' や 'a.exe')。
+        
+    Returns:
+        tuple: (score (int), combined_stderr (str))
+    """
+    input_file = f"in/{seed:04d}.txt"
+    if not os.path.exists(input_file):
+        print(f"Input file {input_file} not found. Generating it...")
+        generate_cases(seed, 1)
+        
+    user_cmd, err_msg = get_user_command(program_path)
+    if err_msg:
+        return -1, err_msg
+        
+    import shlex
+    user_cmd_parts = shlex.split(user_cmd)
+    
+    out_dir = "out"
+    os.makedirs(out_dir, exist_ok=True)
+    output_file = f"{out_dir}/{seed:04d}.txt"
+    
+    print(f"Running case seed={seed} with command: {' '.join(user_cmd_parts)}")
+    
+    try:
+        with open(input_file, "r") as inf, open(output_file, "w") as outf:
+            # プログラムを実行し、標準出力をファイルに保存
+            result = subprocess.run(
+                user_cmd_parts,
+                stdin=inf,
+                stdout=outf,
+                stderr=subprocess.PIPE,
+                text=True,
+                encoding="utf-8",
+                errors="replace",
+                check=False
+            )
+            
+        stderr_output = result.stderr
+        
+        # visツールを実行してスコアを計算
+        vis_cmd = []
+        if os.path.exists("./vis.exe"):
+            vis_cmd = ["./vis.exe", input_file, output_file]
+        else:
+            vis_cmd = ["cargo", "run", "-r", "--bin", "vis", input_file, output_file]
+            
+        vis_result = subprocess.run(
+            vis_cmd,
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            check=False
+        )
+        
+        # スコアを抽出する。visの出力から "Score = X" を探す
+        score = -1
+        score_pattern = re.compile(r"score\s*=\s*(\d+)", re.IGNORECASE)
+        # visツールは標準出力・標準エラー出力のどちらかにスコアを出す
+        for line in (vis_result.stdout + "\n" + vis_result.stderr).splitlines():
+            match = score_pattern.search(line)
+            if match:
+                score = int(match.group(1))
+                
+        # エラー表示用に標準エラー出力などを返す
+        combined_err = f"[Program Stderr]\n{stderr_output}\n[Vis Output]\n{vis_result.stdout}\n{vis_result.stderr}"
+        return score, combined_err
+
+    except Exception as e:
+        return -1, f"Error running test: {e}"
+
+def test_case_interactive(seed, program_path, debug=False, debug_in_only=False):
+    """
+    指定されたプログラムを使用してテストケースを対話的に実行します。
+    
+    Args:
+        seed (int): 実行するテストケースのシード。
+        program_path (str): プログラムへのパス (例: 'code01.py' や 'a.exe')。
+        
+    Returns:
+        tuple: (score (int), stderr (str))
+    """
+    input_file = f"in/{seed:04d}.txt"
+    if not os.path.exists(input_file):
+        print(f"Input file {input_file} not found. Generating it...")
+        generate_cases(seed, 1)
+        
+    user_cmd, err_msg = get_user_command(program_path)
+    if err_msg:
+        return -1, err_msg
     
     # デバッグモードの場合、debug_proxy.py経由でユーザーコマンドを実行する
     if debug or debug_in_only:
@@ -105,18 +199,11 @@ def test_case_interactive(seed, program_path, debug=False, debug_in_only=False):
     
     # テスターの引数にユーザーコマンドを追加する
     # 使用法: tester cmd < in.txt
-    # パイプ入力はsubprocessで行うため、'cmd'はtesterへの引数となります。
-    
-    # tester引数のためにユーザーコマンドを正しく分割する必要がある
-    # 例: "python code01.py" -> ["python", "code01.py"]
     
     import shlex
     user_cmd_parts = shlex.split(user_cmd)
     
     full_cmd = tester_cmd + user_cmd_parts
-    
-    # Windowsでは文字列コマンドでshell=Trueを使うとパイプ処理が簡単かもしれないが、
-    # subprocessはstdinファイルオブジェクトを渡すことができる。
     
     print(f"Running case seed={seed} with command: {' '.join(full_cmd)}")
     
@@ -130,16 +217,12 @@ def test_case_interactive(seed, program_path, debug=False, debug_in_only=False):
                 text=True,
                 encoding="utf-8",
                 errors="replace",
-                check=False # 失敗時でもstderrを取得したいので直ちにはraiseしない
+                check=False
             )
             
         stderr_output = result.stderr
         
-        # スコアを抽出する。通常、stderrの最終行などに"Score = X"のような形式で出力される。
-        
         score = -1
-        # スコアのパースを試みる。正規表現で "Score = 12345" のような形式を探す（大文字小文字区別なし、空白許容）
-        # 行ごとに検索して、最後に見つかったものを採用する（途中経過が出力される場合を考慮）
         score_pattern = re.compile(r"score\s*=\s*(\d+)", re.IGNORECASE)
         for line in stderr_output.splitlines():
             match = score_pattern.search(line)
@@ -151,7 +234,7 @@ def test_case_interactive(seed, program_path, debug=False, debug_in_only=False):
     except Exception as e:
         return -1, f"Error running test: {e}"
 
-def generate_pahcer_config_file(program_path, start_seed, num_cases, score_max=True, config_path="pahcer_config.toml"):
+def generate_pahcer_config_file(program_path, start_seed, num_cases, score_max=True, interactive=True, config_path="pahcer_config.toml"):
     """pahcerの設定ファイルを生成します"""
     problem_name = os.path.basename(os.getcwd())
     end_seed = start_seed + num_cases
@@ -206,26 +289,62 @@ args = ["build", "--release", "--bin", "{bin_name}"]
 
 """
 
-    if os.path.exists("./tester.exe"):
-        tester_program = "./tester.exe"
-        if lang == "python":
-            tester_args_str = f'args = ["python", "{program_path}"]'
-        else:
-            tester_args_str = f'args = ["./{exe_path}"]'
-    else:
-        tester_program = "cargo"
-        if lang == "python":
-            tester_args_str = f'args = ["run", "--release", "--bin", "tester", "python", "{program_path}"]'
-        else:
-            tester_args_str = f'args = ["run", "--release", "--bin", "tester", "./{exe_path}"]'
+    config_content += compile_steps
 
-    config_content += f"""{compile_steps}[[test.test_steps]]
+    if interactive:
+        # インタラクティブ問題: testerがユーザープログラムをラップする (1ステップ)
+        if os.path.exists("./tester.exe"):
+            tester_program = "./tester.exe"
+            if lang == "python":
+                tester_args_str = f'args = ["python", "{program_path}"]'
+            else:
+                tester_args_str = f'args = ["./{exe_path}"]'
+        else:
+            tester_program = "cargo"
+            if lang == "python":
+                tester_args_str = f'args = ["run", "--release", "--bin", "tester", "python", "{program_path}"]'
+            else:
+                tester_args_str = f'args = ["run", "--release", "--bin", "tester", "./{exe_path}"]'
+
+        config_content += f"""[[test.test_steps]]
 program = "{tester_program}"
 {tester_args_str}
 stdin = "./in/{{SEED04}}.txt"
 stdout = "./out/{{SEED04}}.txt"
 stderr = "./err/{{SEED04}}.txt"
 measure_time = true
+"""
+    else:
+        # 非インタラクティブ問題: ユーザープログラム実行 + vis でスコア計算 (2ステップ)
+        if lang == "python":
+            user_program = "python"
+            user_args_str = f'args = ["{program_path}"]'
+        else:
+            user_program = f"./{exe_path}"
+            user_args_str = 'args = []'
+
+        config_content += f"""[[test.test_steps]]
+program = "{user_program}"
+{user_args_str}
+stdin = "./in/{{SEED04}}.txt"
+stdout = "./out/{{SEED04}}.txt"
+stderr = "./err/{{SEED04}}.txt"
+measure_time = true
+
+"""
+
+        # visツールのステップ
+        if os.path.exists("./vis.exe"):
+            vis_program = "./vis.exe"
+            vis_args_str = 'args = ["./in/{SEED04}.txt", "./out/{SEED04}.txt"]'
+        else:
+            vis_program = "cargo"
+            vis_args_str = 'args = ["run", "--release", "--bin", "vis", "./in/{SEED04}.txt", "./out/{SEED04}.txt"]'
+
+        config_content += f"""[[test.test_steps]]
+program = "{vis_program}"
+{vis_args_str}
+measure_time = false
 """
 
     with open(config_path, "w", encoding="utf-8") as f:
@@ -291,7 +410,7 @@ def run_pahcer(program_path, num_cases=100, interactive=True, score_max=True, st
     print("pahcer init complete.")
 
     try:
-        lang = generate_pahcer_config_file(program_path, start_seed, num_cases, score_max, config_path)
+        lang = generate_pahcer_config_file(program_path, start_seed, num_cases, score_max, interactive, config_path)
         print(f"Updated {config_path} for {lang} with {program_path}")
     except ValueError as e:
         print(e)
@@ -361,14 +480,20 @@ if __name__ == "__main__":
         if cmd == "gen":
             generate_cases(int(sys.argv[2]), int(sys.argv[3]))
         elif cmd == "test":
+            interactive_flag = "--interactive" in sys.argv
             debug_flag = "--debug" in sys.argv
             debug_in_flag = "--debug-in" in sys.argv
-            args = [a for a in sys.argv[2:] if a not in ("--debug", "--debug-in")]
-            s, e = test_case_interactive(int(args[0]), args[1], debug=debug_flag, debug_in_only=debug_in_flag)
-            print(f"Score: {s}")
-            print(f"Stderr: {e}")
-            if debug_flag or debug_in_flag:
-                print(f"Debug log: debug/{int(args[0]):04d}.log")
+            args = [a for a in sys.argv[2:] if a not in ("--debug", "--debug-in", "--interactive")]
+            if interactive_flag:
+                s, e = test_case_interactive(int(args[0]), args[1], debug=debug_flag, debug_in_only=debug_in_flag)
+                print(f"Score: {s}")
+                print(f"Stderr: {e}")
+                if debug_flag or debug_in_flag:
+                    print(f"Debug log: debug/{int(args[0]):04d}.log")
+            else:
+                s, e = test_case(int(args[0]), args[1])
+                print(f"Score: {s}")
+                print(f"Output / Stderr:\n{e}")
         elif cmd == "pahcer":
             # python test_tool.py pahcer <program> [num_cases] [--no-interactive] [--min] [--start-seed N]
             args = [a for a in sys.argv[2:] if not a.startswith("--")]
