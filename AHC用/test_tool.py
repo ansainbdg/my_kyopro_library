@@ -4,27 +4,40 @@ import sys
 import re
 import json
 
-def generate_cases(start_seed, num_cases):
+def generate_cases(start_seed, num_cases, dir_suffix=""):
     """
     指定された範囲のシードに対してテストケースを生成します。
     
     Args:
         start_seed (int): 開始シード。
         num_cases (int): 生成するケース数。
+        dir_suffix (str): ディレクトリ接尾辞 (例: "2" → in2/)
     """
+    in_dir = f"in{dir_suffix}"
     seeds = [str(start_seed + i) for i in range(num_cases)]
     with open("seeds.txt", "w") as f:
         f.write("\n".join(seeds))
     
-    print(f"Generating {num_cases} cases starting from seed {start_seed}...")
+    print(f"Generating {num_cases} cases starting from seed {start_seed} into {in_dir}/...")
     
     # gen.exeが存在するか確認し、なければcargoを使用する
     if os.path.exists("./gen.exe"):
         cmd = ["./gen.exe", "seeds.txt"]
     else:
         cmd = ["cargo", "run", "-r", "--bin", "gen", "seeds.txt"]
-        
-    subprocess.run(cmd, check=True, encoding="utf-8")
+    
+    # dir_suffixがある場合、生成先ディレクトリをin{suffix}にリネーム
+    if dir_suffix:
+        # 一旦in/に生成してからリネーム
+        subprocess.run(cmd, check=True, encoding="utf-8")
+        os.makedirs(in_dir, exist_ok=True)
+        for s in range(start_seed, start_seed + num_cases):
+            src = f"in/{s:04d}.txt"
+            dst = f"{in_dir}/{s:04d}.txt"
+            if os.path.exists(src) and not os.path.exists(dst):
+                os.rename(src, dst)
+    else:
+        subprocess.run(cmd, check=True, encoding="utf-8")
     print("Generation complete.")
 
 def get_user_command(program_path):
@@ -86,21 +99,22 @@ def get_user_command(program_path):
         
     return user_cmd, None
 
-def test_case(seed, program_path):
+def test_case(seed, program_path, dir_suffix=""):
     """
     指定されたプログラムを使用してテストケースを非対話的に実行し、visツールでスコアを計算します。
     
     Args:
         seed (int): 実行するテストケースのシード。
         program_path (str): プログラムへのパス (例: 'code01.py' や 'a.exe')。
+        dir_suffix (str): ディレクトリ接尾辞 (例: "2" → in2/, out2/)
         
     Returns:
         tuple: (score (int), combined_stderr (str))
     """
-    input_file = f"in/{seed:04d}.txt"
+    input_file = f"in{dir_suffix}/{seed:04d}.txt"
     if not os.path.exists(input_file):
         print(f"Input file {input_file} not found. Generating it...")
-        generate_cases(seed, 1)
+        generate_cases(seed, 1, dir_suffix=dir_suffix)
         
     user_cmd, err_msg = get_user_command(program_path)
     if err_msg:
@@ -109,7 +123,7 @@ def test_case(seed, program_path):
     import shlex
     user_cmd_parts = shlex.split(user_cmd)
     
-    out_dir = "out"
+    out_dir = f"out{dir_suffix}"
     os.makedirs(out_dir, exist_ok=True)
     output_file = f"{out_dir}/{seed:04d}.txt"
     
@@ -163,21 +177,22 @@ def test_case(seed, program_path):
     except Exception as e:
         return -1, f"Error running test: {e}"
 
-def test_case_interactive(seed, program_path, debug=False, debug_in_only=False):
+def test_case_interactive(seed, program_path, debug=False, debug_in_only=False, dir_suffix=""):
     """
     指定されたプログラムを使用してテストケースを対話的に実行します。
     
     Args:
         seed (int): 実行するテストケースのシード。
         program_path (str): プログラムへのパス (例: 'code01.py' や 'a.exe')。
+        dir_suffix (str): ディレクトリ接尾辞 (例: "2" → in2/, debug2/)
         
     Returns:
         tuple: (score (int), stderr (str))
     """
-    input_file = f"in/{seed:04d}.txt"
+    input_file = f"in{dir_suffix}/{seed:04d}.txt"
     if not os.path.exists(input_file):
         print(f"Input file {input_file} not found. Generating it...")
-        generate_cases(seed, 1)
+        generate_cases(seed, 1, dir_suffix=dir_suffix)
         
     user_cmd, err_msg = get_user_command(program_path)
     if err_msg:
@@ -185,8 +200,9 @@ def test_case_interactive(seed, program_path, debug=False, debug_in_only=False):
     
     # デバッグモードの場合、debug_proxy.py経由でユーザーコマンドを実行する
     if debug or debug_in_only:
-        log_file = f"debug/{seed:04d}.log"
-        os.makedirs("debug", exist_ok=True)
+        debug_dir = f"debug{dir_suffix}"
+        log_file = f"{debug_dir}/{seed:04d}.log"
+        os.makedirs(debug_dir, exist_ok=True)
         in_only_flag = " --in-only" if debug_in_only else ""
         user_cmd = f'python debug_proxy.py --log {log_file}{in_only_flag} --cmd "{user_cmd}"'
         
@@ -234,7 +250,7 @@ def test_case_interactive(seed, program_path, debug=False, debug_in_only=False):
     except Exception as e:
         return -1, f"Error running test: {e}"
 
-def generate_pahcer_config_file(program_path, start_seed, num_cases, score_max=True, interactive=True, config_path="pahcer_config.toml"):
+def generate_pahcer_config_file(program_path, start_seed, num_cases, score_max=True, interactive=False, config_path="pahcer_config.toml", dir_suffix=""):
     """pahcerの設定ファイルを生成します"""
     problem_name = os.path.basename(os.getcwd())
     end_seed = start_seed + num_cases
@@ -291,6 +307,17 @@ args = ["build", "--release", "--bin", "{bin_name}"]
 
     config_content += compile_steps
 
+    def make_test_steps(tester_program, tester_args_str, dir_suffix):
+        return f"""[[test.test_steps]]
+program = "{tester_program}"
+{tester_args_str}
+stdin = "./in{dir_suffix}/{{SEED04}}.txt"
+stdout = "./out{dir_suffix}/{{SEED04}}.txt"
+stderr = "./err{dir_suffix}/{{SEED04}}.txt"
+measure_time = true
+
+"""
+
     if interactive:
         # インタラクティブ問題: testerがユーザープログラムをラップする (1ステップ)
         if os.path.exists("./tester.exe"):
@@ -306,14 +333,7 @@ args = ["build", "--release", "--bin", "{bin_name}"]
             else:
                 tester_args_str = f'args = ["run", "--release", "--bin", "tester", "./{exe_path}"]'
 
-        config_content += f"""[[test.test_steps]]
-program = "{tester_program}"
-{tester_args_str}
-stdin = "./in/{{SEED04}}.txt"
-stdout = "./out/{{SEED04}}.txt"
-stderr = "./err/{{SEED04}}.txt"
-measure_time = true
-"""
+        config_content += make_test_steps(tester_program, tester_args_str, dir_suffix)
     else:
         # 非インタラクティブ問題: ユーザープログラム実行 + vis でスコア計算 (2ステップ)
         if lang == "python":
@@ -323,23 +343,15 @@ measure_time = true
             user_program = f"./{exe_path}"
             user_args_str = 'args = []'
 
-        config_content += f"""[[test.test_steps]]
-program = "{user_program}"
-{user_args_str}
-stdin = "./in/{{SEED04}}.txt"
-stdout = "./out/{{SEED04}}.txt"
-stderr = "./err/{{SEED04}}.txt"
-measure_time = true
-
-"""
+        config_content += make_test_steps(user_program, user_args_str, dir_suffix)
 
         # visツールのステップ
         if os.path.exists("./vis.exe"):
             vis_program = "./vis.exe"
-            vis_args_str = 'args = ["./in/{SEED04}.txt", "./out/{SEED04}.txt"]'
+            vis_args_str = f'args = ["./in{dir_suffix}/{{SEED04}}.txt", "./out{dir_suffix}/{{SEED04}}.txt"]'
         else:
             vis_program = "cargo"
-            vis_args_str = 'args = ["run", "--release", "--bin", "vis", "./in/{SEED04}.txt", "./out/{SEED04}.txt"]'
+            vis_args_str = f'args = ["run", "--release", "--bin", "vis", "./in{dir_suffix}/{{SEED04}}.txt", "./out{dir_suffix}/{{SEED04}}.txt"]'
 
         config_content += f"""[[test.test_steps]]
 program = "{vis_program}"
@@ -353,9 +365,9 @@ measure_time = false
     return lang
 
 
-def run_pahcer(program_path, num_cases=100, interactive=True, score_max=True, start_seed=0,
+def run_pahcer(program_path, num_cases=100, interactive=False, score_max=True, start_seed=0,
                comment="", env=None, json_output=False, shuffle=False,
-               no_result_file=False, freeze_best=False, no_compile=False):
+               no_result_file=False, freeze_best=False, no_compile=False, dir_suffix=""):
     """
     pahcerを使ってテストケースを一括実行します。
 
@@ -410,7 +422,7 @@ def run_pahcer(program_path, num_cases=100, interactive=True, score_max=True, st
     print("pahcer init complete.")
 
     try:
-        lang = generate_pahcer_config_file(program_path, start_seed, num_cases, score_max, interactive, config_path)
+        lang = generate_pahcer_config_file(program_path, start_seed, num_cases, score_max, interactive, config_path, dir_suffix=dir_suffix)
         print(f"Updated {config_path} for {lang} with {program_path}")
     except ValueError as e:
         print(e)
@@ -418,13 +430,14 @@ def run_pahcer(program_path, num_cases=100, interactive=True, score_max=True, st
 
     end_seed = start_seed + num_cases
     # テストケースが足りなければ生成
+    in_dir = f"in{dir_suffix}"
     missing = []
     for s in range(start_seed, end_seed):
-        if not os.path.exists(f"in/{s:04d}.txt"):
+        if not os.path.exists(f"{in_dir}/{s:04d}.txt"):
             missing.append(s)
     if missing:
         print(f"Generating {len(missing)} missing test cases...")
-        generate_cases(start_seed, num_cases)
+        generate_cases(start_seed, num_cases, dir_suffix=dir_suffix)
 
     # pahcer run
     run_cmd = ["pahcer", "run"]
@@ -475,31 +488,50 @@ def run_pahcer(program_path, num_cases=100, interactive=True, score_max=True, st
 
 if __name__ == "__main__":
     # ツール自体のテスト用簡易CLI
+    # 共通: --dir-suffix X でディレクトリ接尾辞を指定
+    def _get_cli_dir_suffix():
+        for i, a in enumerate(sys.argv):
+            if a == "--dir-suffix" and i + 1 < len(sys.argv):
+                return sys.argv[i + 1]
+        return ""
+
     if len(sys.argv) > 1:
         cmd = sys.argv[1]
+        ds = _get_cli_dir_suffix()
         if cmd == "gen":
-            generate_cases(int(sys.argv[2]), int(sys.argv[3]))
+            generate_cases(int(sys.argv[2]), int(sys.argv[3]), dir_suffix=ds)
         elif cmd == "test":
             interactive_flag = "--interactive" in sys.argv
             debug_flag = "--debug" in sys.argv
             debug_in_flag = "--debug-in" in sys.argv
-            args = [a for a in sys.argv[2:] if a not in ("--debug", "--debug-in", "--interactive")]
+            skip_flags = {"--debug", "--debug-in", "--interactive", "--dir-suffix"}
+            args = []
+            skip_next = False
+            for a in sys.argv[2:]:
+                if skip_next:
+                    skip_next = False
+                    continue
+                if a == "--dir-suffix":
+                    skip_next = True
+                    continue
+                if a not in skip_flags:
+                    args.append(a)
             if interactive_flag:
-                s, e = test_case_interactive(int(args[0]), args[1], debug=debug_flag, debug_in_only=debug_in_flag)
+                s, e = test_case_interactive(int(args[0]), args[1], debug=debug_flag, debug_in_only=debug_in_flag, dir_suffix=ds)
                 print(f"Score: {s}")
                 print(f"Stderr: {e}")
                 if debug_flag or debug_in_flag:
-                    print(f"Debug log: debug/{int(args[0]):04d}.log")
+                    print(f"Debug log: debug{ds}/{int(args[0]):04d}.log")
             else:
-                s, e = test_case(int(args[0]), args[1])
+                s, e = test_case(int(args[0]), args[1], dir_suffix=ds)
                 print(f"Score: {s}")
                 print(f"Output / Stderr:\n{e}")
         elif cmd == "pahcer":
-            # python test_tool.py pahcer <program> [num_cases] [--no-interactive] [--min] [--start-seed N]
+            # python test_tool.py pahcer <program> [num_cases] [--no-interactive] [--min] [--start-seed N] [--dir-suffix X]
             args = [a for a in sys.argv[2:] if not a.startswith("--")]
             program = args[0]
             num_cases = int(args[1]) if len(args) > 1 else 100
-            interactive = "--no-interactive" not in sys.argv
+            interactive = "--interactive" in sys.argv
             score_max = "--min" not in sys.argv
             start_seed = 0
             for i, a in enumerate(sys.argv):
@@ -509,5 +541,5 @@ if __name__ == "__main__":
             for i, a in enumerate(sys.argv):
                 if a == "--comment" and i + 1 < len(sys.argv):
                     comment = sys.argv[i + 1]
-            run_pahcer(program, num_cases, interactive, score_max, start_seed, comment=comment)
+            run_pahcer(program, num_cases, interactive, score_max, start_seed, comment=comment, dir_suffix=ds)
 

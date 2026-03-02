@@ -273,7 +273,7 @@ def _handle_prune(trial, scores):
 # ============================================================
 # pahcer 初期設定（最初の1回だけ）
 # ============================================================
-def setup_pahcer(program_path, num_cases, start_seed, interactive, score_max):
+def setup_pahcer(program_path, num_cases, start_seed, interactive, score_max, dir_suffix=""):
     """pahcer init + config生成 + テストケース生成を行う。"""
     problem_name = os.path.basename(os.getcwd())
     config_path = "pahcer_config.toml"
@@ -305,15 +305,16 @@ def setup_pahcer(program_path, num_cases, start_seed, interactive, score_max):
     print("pahcer init complete.")
 
     # config生成
-    generate_pahcer_config_file(program_path, start_seed, num_cases, score_max, interactive, config_path)
+    generate_pahcer_config_file(program_path, start_seed, num_cases, score_max, interactive, config_path, dir_suffix=dir_suffix)
     print(f"Generated {config_path}")
 
     # テストケース生成
+    in_dir = f"in{dir_suffix}"
     end_seed = start_seed + num_cases
-    missing = [s for s in range(start_seed, end_seed) if not os.path.exists(f"in/{s:04d}.txt")]
+    missing = [s for s in range(start_seed, end_seed) if not os.path.exists(f"{in_dir}/{s:04d}.txt")]
     if missing:
         print(f"Generating {len(missing)} missing test cases...")
-        generate_cases(start_seed, num_cases)
+        generate_cases(start_seed, num_cases, dir_suffix=dir_suffix)
 
 
 # ============================================================
@@ -335,7 +336,7 @@ def load_study(path=STUDY_PKL_PATH):
 # ランダムウォームアップ（相対モード用）
 # ============================================================
 def run_random_warmup(program_path, param_defs, num_cases, start_seed,
-                      interactive, score_max, n_warmup):
+                      interactive, score_max, n_warmup, dir_suffix=""):
     """
     ランダムハイパラで n_warmup 回 run_pahcer を実行し、
     best_scores.json を更新する。結果を study.csv に保存。
@@ -398,6 +399,7 @@ def run_random_warmup(program_path, param_defs, num_cases, start_seed,
             no_result_file=False,
             freeze_best=False,
             no_compile=(i > 0),
+            dir_suffix=dir_suffix,
         )
 
         # スコアを取得
@@ -537,6 +539,7 @@ def run_optuna(
     n_random_warmup=0,
     study_name="optuna-study",
     sampler=None,
+    dir_suffix="",
 ):
     """
     Optuna連携ハイパーパラメータ最適化を実行する。
@@ -554,6 +557,7 @@ def run_optuna(
         n_random_warmup (int): 相対モード用ランダムウォームアップ回数
         study_name (str): Optuna study の名前
         sampler: Optuna sampler (default: optunahub AutoSampler)
+        dir_suffix (str): ディレクトリ接尾辞 (例: "2" → in2/, out2/)
 
     Returns:
         optuna.study.Study: 最適化後の study オブジェクト
@@ -578,7 +582,7 @@ def run_optuna(
     print()
 
     # 1. pahcer 初期設定
-    setup_pahcer(program_path, num_cases, start_seed, interactive, score_max)
+    setup_pahcer(program_path, num_cases, start_seed, interactive, score_max, dir_suffix=dir_suffix)
 
     warmup_results = []
 
@@ -592,7 +596,7 @@ def run_optuna(
         if mode == "relative" and n_random_warmup > 0:
             warmup_results = run_random_warmup(
                 program_path, param_defs, num_cases, start_seed,
-                interactive, score_max, n_random_warmup
+                interactive, score_max, n_random_warmup, dir_suffix=dir_suffix
             )
     
         if mode == "absolute":
@@ -667,6 +671,7 @@ if __name__ == "__main__":
     parser.add_argument("--study-name", default="optuna-study", help="Study名 (default: optuna-study)")
     parser.add_argument("--sampler", default="auto", choices=["auto", "tpe", "cmaes"],
                         help="Optuna sampler (default: auto)")
+    parser.add_argument("--dir-suffix", default="", help="ディレクトリ接尾辞 (例: 2 → in2/)")
 
     args = parser.parse_args()
 
@@ -690,4 +695,5 @@ if __name__ == "__main__":
         n_random_warmup=args.n_random_warmup,
         study_name=args.study_name,
         sampler=sampler,
+        dir_suffix=args.dir_suffix,
     )
