@@ -10,4 +10,4 @@ You may run the solution program and report its execution results, logs, scores,
 
 Here, "solution program" refers to any program created or being created for the purpose of solving this contest problem, regardless of whether it was created by the user or by generative AI, and regardless of whether it is still in progress or already complete.
 
-test_tool.pyに実行ツールがあるので、それでコードの実行確認ができる。
+test_tool.pyに実行ツールがあるので、それでコードの実行確認ができる。test_toolsの内容を確認し、活用せよ
